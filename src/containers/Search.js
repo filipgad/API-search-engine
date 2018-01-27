@@ -4,55 +4,98 @@ export default class Search extends Component {
   constructor() {
     super();
     this.state = {
+      search: '',
+      selected: '',
       universities: [],
-      api: "http://localhost:9000/api/search?name=gdansk"
+      countries: []
     }
   };
 
-  componentWillMount() {
-    this.searchAPI();
-  }
-
   searchAPI = () => {
-    fetch(this.state.api)
+    fetch(`http://localhost:9000/api/search?name=${this.state.search}${ this.state.selected == 'all' ? '' : `&country=${this.state.selected}`}`)
     .then(results => {
       if (results.ok)
         return results.json(); 
       else
         throw new Error('Błąd sieci!');
     }).then(university => {
-      console.log(university);
 
-      let univer = university.map( (uni, index) => {
-        console.log(uni.name);
-        if(uni.domains.length>=0) {
-          console.log(uni.domains);
-          var dom = uni.domains.map( (domain, index) => {
-            return <li key={index}>{domain}</li>
+      let universities = university.map( (universityElem, universityIndex) => {
+        if(universityElem.domains.length>=0) {
+          var domainsList = universityElem.domains.map( (domainElem, domainIndex) => {
+            return <li key={domainIndex}>{domainElem}</li>
           });
         }
         return (
-          <ul key={index}>
-            <li>University: <a href={uni.web_pages[0]}>{uni.name}</a></li>
-            <li>Country: {uni.country}</li>
-            <li>Country code: {uni.alpha_two_code}</li>
-            <li>
-              <ul>{dom}</ul>
+          <ul key={universityIndex}>
+            <li>University: <a href={universityElem.web_pages[0]}>{universityElem.name}</a></li>
+            <li>Country: {universityElem.country}</li>
+            <li>Country code: {universityElem.alpha_two_code}</li>
+            <li>Domains: 
+              <ul>{domainsList}</ul>
             </li>
           </ul>
         )
       })
-      this.setState({universities: univer});
-      console.log("state", this.state.universities);
-    })
+      let countryArr = [];
+      let country = university.map( universityElem => {
+        return universityElem.country
+      }).forEach ( countryElem => {
+        if (countryArr.indexOf(countryElem) < 0) {
+          countryArr.push(countryElem);
+        }
+      });
+      countryArr.sort();
+      let countries = countryArr.map( (countryArrElem, countryArrIndex) => {
+        return (
+          <option key= {countryArrIndex+1} value={countryArrElem}>{countryArrElem}</option>
+        )
+      });
+      this.setState({
+        universities: universities,
+        countries: countries 
+      });
+    }).catch(error => {
+      console.error(error);
+    });
   }
 
+  handleNameChange = (event) => { 
+    this.setState({search: event.target.value});
+  };
 
+  handleSubmit = (event) => { 
+    event.preventDefault();
+    this.searchAPI();
+  };
+
+  handleCountryChange = (event) => {
+    this.setState({selected: event.target.value}, () => {
+      this.searchAPI();
+    });
+  }
+  
   render() {
     return (
       <div>
-        {this.state.universities}
-      </div>
+        <form onSubmit={this.handleSubmit}>
+          <label>
+            Find university:
+            <input type="text" value={this.state.search} onChange={this.handleNameChange} /> 
+          </label>
+          <input type="submit" value="Search" /> 
+        </form>
+          <label>
+            Select country:
+            <select value={this.state.selected} onChange={this.handleCountryChange}>
+              <option key="0" value="all">All</option>
+              {this.state.countries}
+            </select>
+          </label>
+        <div>
+            {this.state.universities}
+        </div>
+      </div> 
     )
   }
 }
