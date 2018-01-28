@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 import University from './University'
 
@@ -16,4 +17,8 @@ export default class UniversityList extends Component {
             </div>
         )
     }
+}
+
+UniversityList.propTypes = {
+    universityResults: PropTypes.array
 }
