@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
 
+import Search from './Search'
+
 export default class App extends Component {
   render() {
-    return (
-      <div>
-        Hello World!
-      </div>
-    )
+    return <Search />
   }
 }
